@@ -1,0 +1,22 @@
+{
+  "name": "@soa-cli/utils",
+  "version": "0.0.3",
+  "description": "> TODO: description",
+  "author": "lml <soalin228@163.com>",
+  "homepage": "",
+  "license": "ISC",
+  "main": "lib/index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "__tests__"
+  },
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "test": "echo \"Error: run tests from root\" && exit 1"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
