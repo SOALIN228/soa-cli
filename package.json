@@ -1,6 +1,6 @@
 {
   "name": "soa-cli",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "description": "",
   "main": "index.js",
   "bin": {
@@ -14,5 +14,10 @@
   "license": "ISC",
   "devDependencies": {
     "lerna": "^4.0.0"
+  },
+  "dependencies": {
+    "dedent": "^0.7.0",
+    "npmlog": "^5.0.1",
+    "yargs": "^17.2.1"
   }
 }
