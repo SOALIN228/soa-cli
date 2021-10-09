@@ -1,10 +1,13 @@
 {
   "name": "@soa-cli/core",
-  "version": "0.0.4",
+  "version": "0.0.6",
   "description": "> TODO: description",
   "author": "lml <soalin228@163.com>",
   "homepage": "",
   "license": "ISC",
+  "bin": {
+    "soa": "bin/index.js"
+  },
   "main": "lib/index.js",
   "directories": {
     "lib": "lib",
@@ -17,7 +20,9 @@
     "test": "echo \"Error: run tests from root\" && exit 1"
   },
   "dependencies": {
-    "@soa-cli/utils": "^0.0.4"
+    "@soa-cli/utils": "file:../../utils/utils",
+    "import-local": "^3.0.3",
+    "npmlog": "^5.0.1"
   },
   "publishConfig": {
     "access": "public"
