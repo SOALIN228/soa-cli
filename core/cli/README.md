@@ -1,11 +1,18 @@
-# `core`
+# `@soa-cli/core`
 
-> TODO: description
+soa-cli核心模块，具有以下功能
 
-## Usage
+- 检查版本号
+  
+- 检查node版本
+  
+- 检查root权限
+  
+- 检查是否存在用户目录
 
-```
-const core = require('core');
+- 检查用户输入，是否开启debug
 
-// TODO: DEMONSTRATE API
-```
+- 处理环境变量，存储和使用
+
+- 检查版本信息，是否存在最新
+

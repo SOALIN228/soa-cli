@@ -3,3 +3,5 @@
 - 0.0.3 添加lerna
 - 0.0.4 修复gitignore忽略lock文件问题
 - 0.0.5 使用yargs改造
+- 0.0.6 模块整理
+- 0.0.7 添加log模块、get-npm-info版本信息模块

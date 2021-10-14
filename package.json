@@ -1,14 +1,29 @@
 {
   "name": "soa-cli",
   "version": "0.0.5",
+  "bin": {
+    "soa-test": "bin/index.js"
+  },
   "description": "",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "webpack",
+    "dev": "webpack -w"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "lerna": "^4.0.0"
+    "@babel/core": "^7.15.8",
+    "@babel/plugin-transform-runtime": "^7.15.8",
+    "@babel/preset-env": "^7.15.8",
+    "@babel/runtime-corejs3": "^7.15.4",
+    "babel-loader": "^8.2.2",
+    "lerna": "^4.0.0",
+    "path-exists": "^4.0.0"
+  },
+  "dependencies": {
+    "commander": "^8.2.0",
+    "webpack": "^5.58.2",
+    "webpack-cli": "^4.9.0"
   }
 }
