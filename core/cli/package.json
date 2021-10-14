@@ -1,6 +1,6 @@
 {
   "name": "@soa-cli/core",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "> TODO: description",
   "author": "lml <soalin228@163.com>",
   "homepage": "",
@@ -20,8 +20,8 @@
     "test": "echo \"Error: run tests from root\" && exit 1"
   },
   "dependencies": {
-    "@soa-cli/log": "file:../../utils/log",
     "@soa-cli/get-npm-info": "file:../../utils/get-npm-info",
+    "@soa-cli/log": "file:../../utils/log",
     "@soa-cli/utils": "file:../../utils/utils",
     "colors": "^1.4.0",
     "dotenv": "^10.0.0",
