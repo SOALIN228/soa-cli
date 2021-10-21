@@ -1,6 +1,6 @@
 {
   "name": "@soa-cli/exec",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "> TODO: description",
   "author": "lml <soalin228@163.com>",
   "homepage": "https://github.com/SOALIN228/soa-cli#readme",
@@ -27,7 +27,7 @@
     "url": "https://github.com/SOALIN228/soa-cli/issues"
   },
   "dependencies": {
-    "@soa-cli/package": "file:../../models/package",
-    "@soa-cli/log": "file:../../utils/log"
+    "@soa-cli/log": "file:../../utils/log",
+    "@soa-cli/package": "file:../../models/package"
   }
 }
