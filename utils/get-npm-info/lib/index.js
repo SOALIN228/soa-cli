@@ -41,13 +41,30 @@ function getSemverVersions (baseVersion, versions) {
     .sort((a, b) => semver.gt(b, a) ? 1 : -1)
 }
 
-async function getNpmSemverVersion(baseVersion, npmName, registry) {
-  const versions = await getNpmVersions(npmName, registry);
-  const newVersions = getSemverVersions(baseVersion, versions);
+// 检查当前版本是否为最新，是返回null，否返回最新版本
+async function getNpmSemverVersion (baseVersion, npmName, registry) {
+  const versions = await getNpmVersions(npmName, registry)
+  const newVersions = getSemverVersions(baseVersion, versions)
   if (newVersions && newVersions.length > 0) {
-    return newVersions[0];
+    return newVersions[0]
   }
-  return null;
+  return null
 }
 
-module.exports = { getNpmInfo, getNpmVersions, getNpmSemverVersion }
+// 获取最新npm版本
+async function getNpmLatestVersion (npmName, registry) {
+  let versions = await getNpmVersions(npmName, registry)
+  if (versions) {
+    return versions.sort((a, b) => semver.gt(b, a))[0]
+  }
+  return null
+}
+
+module.exports = {
+  getNpmInfo,
+  getDefaultRegistry,
+  getNpmVersions,
+  getSemverVersions,
+  getNpmSemverVersion,
+  getNpmLatestVersion
+}

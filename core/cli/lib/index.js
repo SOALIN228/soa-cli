@@ -5,30 +5,88 @@ const semver = require('semver')
 const colors = require('colors')
 const userHome = require('user-home')
 const pathExists = require('path-exists').sync
+const commander = require('commander')
 
 const log = require('@soa-cli/log')
+const exec = require('@soa-cli/exec')
+const init = require('@soa-cli/init')
 const pkg = require('../package.json')
 const constant = require('./const')
 
-module.exports = core
+const program = new commander.Command()
 
-// 入参
-let args
+module.exports = core
 
 async function core () {
   try {
-    checkPkgVersion()
+    await prepare()
     checkNodeVersion()
-    checkRoot()
-    checkUserHome()
-    checkInputArgs()
-    checkEnv()
-    await checkGlobalUpdate()
+    registerCommand()
   } catch (e) {
     log.error(e.message)
+    if (program.opts().debug) {
+      console.log(e)
+    }
   }
 }
 
+async function prepare () {
+  checkPkgVersion()
+  checkRoot()
+  checkUserHome()
+  checkEnv()
+  await checkGlobalUpdate()
+}
+
+// 脚手架命令处理
+function registerCommand () {
+  program
+    .name(Object.keys(pkg.bin)[0])
+    .usage('<command> [options]')
+    .version(pkg.version)
+    .option('-d, --debug', '是否开启调试模式', false)
+    .option('-tp, --targetPath <targetPath>', '是否指定本地调试文件路径', '')
+
+  // 注册init命令
+  program
+    .command('init [projectName]')
+    .option('-f, --force', '是否强制初始化项目')
+    .action(exec)
+
+  // 开启debug模式
+  program.on('option:debug', function () {
+    if (program.opts().debug) {
+      process.env.LOG_LEVEL = 'verbose'
+    } else {
+      process.env.LOG_LEVEL = 'info'
+    }
+    // 修改log level 用于debug调试
+    log.level = process.env.LOG_LEVEL
+  })
+
+  // 指定targetPath
+  program.on('option:targetPath', function () {
+    process.env.CLI_TARGET_PATH = this.opts().targetPath
+  })
+
+  // 对未知命令监听
+  program.on('command:*', function (obj) {
+    const availableCommands = program.commands.map(cmd => cmd.name())
+    console.log(colors.red('未知的命令：' + obj[0]))
+    if (availableCommands.length > 0) {
+      console.log(colors.red('可用命令：' + availableCommands.join(',')))
+    }
+  })
+
+  program.parse(process.argv)
+  // 未输入命令时，打印帮助文档
+  if (program.args && program.args.length < 1) {
+    program.outputHelp()
+    console.log() // 打印空行
+  }
+}
+
+// 检查脚手架版本信息
 async function checkGlobalUpdate () {
   // 获取当前版本号和模块名
   const currentVersion = pkg.version
@@ -47,6 +105,7 @@ async function checkGlobalUpdate () {
   }
 }
 
+// 检查环境变量
 function checkEnv () {
   const dotenv = require('dotenv')
   const dotenvPath = path.resolve(userHome, '.env')
@@ -57,7 +116,6 @@ function checkEnv () {
     })
   }
   createDefaultConfig()
-  log.verbose('环境变量', process.env.CLI_HOME_PATH)
 }
 
 // 创建默认的环境变量配置
@@ -73,28 +131,14 @@ function createDefaultConfig () {
   process.env.CLI_HOME_PATH = cliConfig.cliHome
 }
 
-function checkInputArgs () {
-  args = require('minimist')(process.argv.slice(2))
-  checkArgs()
-}
-
-function checkArgs () {
-  if (args.debug) {
-    process.env.LOG_LEVEL = 'verbose'
-  } else {
-    process.env.LOG_LEVEL = 'info'
-  }
-  // 修改log level 用于debug调试
-  log.level = process.env.LOG_LEVEL
-}
-
+// 检查用户主目录是否存在，类似/Users/soalin
 function checkUserHome () {
-  // 检查类似/Users/soalin 的用户主目录是否存在
   if (!userHome || !pathExists(userHome)) {
     throw new Error(colors.red('当前用户主目录不存在，请检查!'))
   }
 }
 
+// 检查是否通过root权限执行脚手架
 function checkRoot () {
   // 对root账号（sudo）启动的命令进行降级
   // 判断geteuid是否为0（root），如果为0对uid和gid进行修改
@@ -102,10 +146,12 @@ function checkRoot () {
   rootCheck()
 }
 
+// 检查脚手架版本信息
 function checkPkgVersion () {
   log.success('notice', pkg.version)
 }
 
+// 检查Node版本信息
 function checkNodeVersion () {
   const currentVersion = process.version
   // 最低版本号

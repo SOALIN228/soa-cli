@@ -1,5 +1,5 @@
 {
-  "name": "get-npm-info",
+  "name": "@soa-cli/init",
   "version": "0.0.7",
   "description": "> TODO: description",
   "author": "lml <soalin228@163.com>",
@@ -13,6 +13,9 @@
   "files": [
     "lib"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/SOALIN228/soa-cli.git"
@@ -22,14 +25,5 @@
   },
   "bugs": {
     "url": "https://github.com/SOALIN228/soa-cli/issues"
-  },
-  "dependencies": {
-    "axios": "^0.22.0",
-    "semver": "^7.3.5",
-    "url-join": "^4.0.1"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "gitHead": "18b2993777adbee8dfd1f6d3dee377eba4d1ec38"
+  }
 }
