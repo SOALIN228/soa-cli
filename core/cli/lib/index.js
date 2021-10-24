@@ -9,7 +9,6 @@ const commander = require('commander')
 
 const log = require('@soa-cli/log')
 const exec = require('@soa-cli/exec')
-const init = require('@soa-cli/init')
 const pkg = require('../package.json')
 const constant = require('./const')
 
@@ -20,7 +19,6 @@ module.exports = core
 async function core () {
   try {
     await prepare()
-    checkNodeVersion()
     registerCommand()
   } catch (e) {
     log.error(e.message)
@@ -149,14 +147,4 @@ function checkRoot () {
 // 检查脚手架版本信息
 function checkPkgVersion () {
   log.success('notice', pkg.version)
-}
-
-// 检查Node版本信息
-function checkNodeVersion () {
-  const currentVersion = process.version
-  // 最低版本号
-  const lowestVersion = constant.LOWEST_NODE_VERSION
-  if (!semver.gte(currentVersion, lowestVersion)) {
-    throw new Error(colors.red(`soa-cli 需要安装 v${lowestVersion} 以上版本的 Node.js`))
-  }
 }

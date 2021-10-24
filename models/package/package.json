@@ -27,12 +27,13 @@
     "url": "https://github.com/SOALIN228/soa-cli/issues"
   },
   "dependencies": {
-    "@soa-cli/format-path": "file:../../utils/format-path",
+    "@soa-cli/format-path": "^0.0.8",
     "@soa-cli/get-npm-info": "file:../../utils/get-npm-info",
-    "@soa-cli/utils": "file:../../utils/utils",
+    "@soa-cli/utils": "^0.0.8",
     "fs-extra": "^10.0.0",
     "npminstall": "4.11.0",
     "path-exists": "4.0.0",
     "pkg-dir": "5.0.0"
-  }
+  },
+  "gitHead": "f32119a92d9bf0d72d5299497c6901576e935b2e"
 }

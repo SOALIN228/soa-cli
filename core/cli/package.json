@@ -20,11 +20,10 @@
     "test": "echo \"Error: run tests from root\" && exit 1"
   },
   "dependencies": {
-    "@soa-cli/exec": "file:../exec",
+    "@soa-cli/exec": "^0.0.8",
     "@soa-cli/get-npm-info": "file:../../utils/get-npm-info",
-    "@soa-cli/init": "file:../../commands/init",
-    "@soa-cli/log": "file:../../utils/log",
-    "@soa-cli/utils": "file:../../utils/utils",
+    "@soa-cli/log": "^0.0.8",
+    "@soa-cli/utils": "^0.0.8",
     "colors": "^1.4.0",
     "commander": "^8.2.0",
     "dotenv": "^10.0.0",
@@ -37,5 +36,5 @@
   "publishConfig": {
     "access": "public"
   },
-  "gitHead": "18b2993777adbee8dfd1f6d3dee377eba4d1ec38"
+  "gitHead": "f32119a92d9bf0d72d5299497c6901576e935b2e"
 }

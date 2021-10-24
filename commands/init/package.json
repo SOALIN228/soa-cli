@@ -25,5 +25,10 @@
   },
   "bugs": {
     "url": "https://github.com/SOALIN228/soa-cli/issues"
+  },
+  "gitHead": "f32119a92d9bf0d72d5299497c6901576e935b2e",
+  "dependencies": {
+    "@soa-cli/command": "file:../../models/command",
+    "@soa-cli/log": "file:../../utils/log"
   }
 }
