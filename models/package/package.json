@@ -1,6 +1,6 @@
 {
   "name": "@soa-cli/package",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "> TODO: description",
   "author": "lml <soalin228@163.com>",
   "homepage": "https://github.com/SOALIN228/soa-cli#readme",
@@ -27,9 +27,9 @@
     "url": "https://github.com/SOALIN228/soa-cli/issues"
   },
   "dependencies": {
-    "@soa-cli/format-path": "^0.0.9",
+    "@soa-cli/format-path": "^0.0.10",
     "@soa-cli/get-npm-info": "file:../../utils/get-npm-info",
-    "@soa-cli/utils": "^0.0.9",
+    "@soa-cli/utils": "^0.0.10",
     "fs-extra": "^10.0.0",
     "npminstall": "4.11.0",
     "path-exists": "4.0.0",
