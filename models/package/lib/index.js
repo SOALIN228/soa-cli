@@ -111,6 +111,7 @@ class Package {
       }
       return null
     }
+
     // 是否存在缓存目录
     if (this.storeDir) {
       return _getRootFile(this.cacheFilePath)

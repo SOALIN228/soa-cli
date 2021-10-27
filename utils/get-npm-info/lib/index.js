@@ -20,7 +20,11 @@ function getNpmInfo (npmName, registry) {
   })
 }
 
-function getDefaultRegistry (isOriginal = false) {
+/**
+ * npm地址
+ * @param isOriginal 默认使用官方源，可以选择淘宝源
+ */
+function getDefaultRegistry (isOriginal = true) {
   return isOriginal ? 'https://registry.npmjs.org' : 'https://registry.npm.taobao.org'
 }
 
@@ -55,7 +59,7 @@ async function getNpmSemverVersion (baseVersion, npmName, registry) {
 async function getNpmLatestVersion (npmName, registry) {
   let versions = await getNpmVersions(npmName, registry)
   if (versions) {
-    return versions.sort((a, b) => semver.gt(b, a))[0]
+    return versions.sort((a, b) => semver.gt(b, a) ? 1 : -1)[0]
   }
   return null
 }

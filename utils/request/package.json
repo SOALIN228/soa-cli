@@ -1,5 +1,5 @@
 {
-  "name": "@soa-cli/init",
+  "name": "@soa-cli/request",
   "version": "0.0.9",
   "description": "> TODO: description",
   "author": "lml <soalin228@163.com>",
@@ -26,16 +26,7 @@
   "bugs": {
     "url": "https://github.com/SOALIN228/soa-cli/issues"
   },
-  "gitHead": "f32119a92d9bf0d72d5299497c6901576e935b2e",
   "dependencies": {
-    "@soa-cli/command": "file:../../models/command",
-    "@soa-cli/log": "file:../../utils/log",
-    "@soa-cli/package": "file:../../models/package",
-    "@soa-cli/request": "file:../../utils/request",
-    "@soa-cli/utils": "file:../../utils/utils",
-    "fs-extra": "^10.0.0",
-    "inquirer": "^8.2.0",
-    "semver": "^7.3.5",
-    "user-home": "^3.0.0"
+    "axios": "^0.24.0"
   }
 }
