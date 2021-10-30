@@ -6,15 +6,22 @@ const fse = require('fs-extra')
 const inquirer = require('inquirer')
 const semver = require('semver')
 const userHome = require('user-home')
+const glob = require('glob')
+const ejs = require('ejs')
 const log = require('@soa-cli/log')
 const Command = require('@soa-cli/command')
 const Package = require('@soa-cli/package')
-const { spinnerStart, sleep } = require('@soa-cli/utils')
+const { spinnerStart, sleep, execAsync } = require('@soa-cli/utils')
 
 const getProjectTemplate = require('./getProjectTemplate')
 
 const TYPE_PROJECT = 'project'
 const TYPE_COMPONENT = 'component'
+
+const TEMPLATE_TYPE_NORMAL = 'normal'
+const TEMPLATE_TYPE_CUSTOM = 'custom'
+
+const WHITE_COMMAND = ['npm', 'cnpm']
 
 class InitCommand extends Command {
   init () {
@@ -33,13 +40,124 @@ class InitCommand extends Command {
         this.projectInfo = projectInfo
         // 2. 下载模板
         await this.downloadTemplate()
+        // 3. 安装模板
+        await this.installTemplate()
       }
     } catch (e) {
       log.error(e.message)
-      // if (process.env.LOG_LEVEL === 'verbose') {
-      //   console.log(e)
-      // }
+      if (process.env.LOG_LEVEL === 'verbose') {
+        console.log(e)
+      }
     }
+  }
+
+  async installTemplate () {
+    log.verbose('templateInfo', this.templateInfo)
+    if (this.templateInfo) {
+      if (!this.templateInfo.type) {
+        this.templateInfo.type = TEMPLATE_TYPE_NORMAL
+      }
+      if (this.templateInfo.type === TEMPLATE_TYPE_NORMAL) {
+        // 标准安装
+        await this.installNormalTemplate()
+      } else if (this.templateInfo.type === TEMPLATE_TYPE_CUSTOM) {
+        // 自定义安装
+        // await this.installCustomTemplate()
+      } else {
+        throw new Error('无法识别项目模板类型！')
+      }
+    } else {
+      throw new Error('项目模板信息不存在！')
+    }
+  }
+
+  async installNormalTemplate () {
+    log.verbose('templateNpm', this.templateNpm)
+    // 拷贝模板代码至当前目录
+    let spinner = spinnerStart('正在安装模板...')
+    await sleep()
+    const targetPath = process.cwd()
+    try {
+      const templatePath = path.resolve(this.templateNpm.cacheFilePath, 'template')
+      // ensureDirSync检测文件路径是否存在
+      fse.ensureDirSync(templatePath)
+      fse.ensureDirSync(targetPath)
+      fse.copySync(templatePath, targetPath)
+    } catch (e) {
+      throw e
+    } finally {
+      spinner.stop(true)
+      log.success('模板安装成功')
+    }
+    const templateIgnore = this.templateInfo.ignore || []
+    const ignore = ['**/node_modules/**', 'public/**', ...templateIgnore]
+    await this.ejsRender({ ignore })
+    const { installCommand, startCommand } = this.templateInfo
+    // 依赖安装
+    await this.execCommand(installCommand, '依赖安装失败！')
+    // 启动命令执行
+    await this.execCommand(startCommand, '启动执行命令失败！')
+  }
+
+  async ejsRender (options) {
+    // 执行init命令的路径
+    const dir = process.cwd()
+    const projectInfo = this.projectInfo
+    return new Promise((resolve, reject) => {
+      // glob 获取指定目录下的所有文件名称
+      glob('**', {
+        cwd: dir,
+        ignore: options.ignore || '',
+        nodir: true, // 忽略文件夹
+      }, function (err, files) {
+        if (err) {
+          reject(err)
+        }
+        Promise.all(files.map(file => {
+          const filePath = path.join(dir, file)
+          return new Promise((resolve1, reject1) => {
+            ejs.renderFile(filePath, projectInfo, {}, (err, result) => {
+              if (err) {
+                reject1(err)
+              } else {
+                // result是ejs渲染后的结果，但是不会写入文件中，需要通过writeFileSync进行渲染替换
+                fse.writeFileSync(filePath, result)
+                resolve1(result)
+              }
+            })
+          })
+        })).then(() => resolve())
+          .catch((err) => reject(err))
+      })
+    })
+  }
+
+  async execCommand (command, errMsg) {
+    let ret
+    if (command) {
+      const cmdArray = command.split(' ')
+      const cmd = this.checkCommand(cmdArray[0])
+      if (!cmd) {
+        throw new Error('命令不存在！命令：' + command)
+      }
+      const args = cmdArray.slice(1)
+      ret = await execAsync(cmd, args, {
+        stdio: 'inherit',
+        cwd: process.cwd(),
+      })
+    }
+    if (ret !== 0) {
+      throw new Error(errMsg)
+    }
+    return ret
+  }
+
+  // 检测命令是否在白名单中
+  checkCommand (cmd) {
+    if (WHITE_COMMAND.includes(cmd)) {
+      return cmd
+    }
+    return null
   }
 
   async downloadTemplate () {
@@ -138,6 +256,12 @@ class InitCommand extends Command {
     }
 
     let projectInfo = {}
+    // 项目名称是在命令中存在且合法则跳过项目名输入环节，反之进入项目名输入环节
+    let isProjectNameValid = false
+    if (isValidName(this.projectName)) {
+      isProjectNameValid = true
+      projectInfo.projectName = this.projectName
+    }
     // 1. 选择创建项目或组件
     const { type } = await inquirer.prompt({
       type: 'list',
@@ -153,7 +277,7 @@ class InitCommand extends Command {
       }],
     })
     const title = type === TYPE_PROJECT ? '项目' : '组件'
-    const project = await inquirer.prompt([{
+    const projectNamePrompt = {
       type: 'input',
       name: 'projectName',
       message: `请输入${title}名称`,
@@ -174,7 +298,12 @@ class InitCommand extends Command {
       filter: function (v) {
         return v
       },
-    }, {
+    }
+    const projectPrompt = []
+    if (!isProjectNameValid) {
+      projectPrompt.push(projectNamePrompt)
+    }
+    projectPrompt.push({
       type: 'input',
       name: 'projectVersion',
       message: `请输入${title}版本号`,
@@ -202,11 +331,22 @@ class InitCommand extends Command {
       name: 'projectTemplate',
       message: `请选择${title}模板`,
       choices: this.createTemplateChoice(),
-    }])
+    })
+    const project = await inquirer.prompt(projectPrompt)
     projectInfo = {
       ...projectInfo,
       type,
       ...project,
+    }
+
+    // 生成classname
+    if (projectInfo.projectName) {
+      projectInfo.name = projectInfo.projectName
+      // 将项目名由驼峰转为中划线分割，SoaTemplate => soa-template
+      projectInfo.className = require('kebab-case')(projectInfo.projectName).replace(/^-/, '')
+    }
+    if (projectInfo.projectVersion) {
+      projectInfo.version = projectInfo.projectVersion
     }
     return projectInfo
   }
