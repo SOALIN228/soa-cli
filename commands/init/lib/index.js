@@ -62,12 +62,40 @@ class InitCommand extends Command {
         await this.installNormalTemplate()
       } else if (this.templateInfo.type === TEMPLATE_TYPE_CUSTOM) {
         // 自定义安装
-        // await this.installCustomTemplate()
+        await this.installCustomTemplate()
       } else {
         throw new Error('无法识别项目模板类型！')
       }
     } else {
       throw new Error('项目模板信息不存在！')
+    }
+  }
+
+  async installCustomTemplate () {
+    // 查询自定义模板的入口文件
+    if (await this.templateNpm.exists()) {
+      // 自定义模版入口文件地址
+      const rootFile = this.templateNpm.getRootFilePath()
+      if (fs.existsSync(rootFile)) {
+        log.notice('开始执行自定义模板')
+        // template地址
+        const templatePath = path.resolve(this.templateNpm.cacheFilePath, 'template')
+        // 命令参数
+        const options = {
+          templateInfo: this.templateInfo,
+          projectInfo: this.projectInfo,
+          sourcePath: templatePath,
+          targetPath: process.cwd(),
+        }
+        // 将命令参数传递给自定义模版入口文件，生成命令字符串
+        const code = `require('${rootFile}')(${JSON.stringify(options)})`
+        log.verbose('code', code)
+        // 执行命令字符串
+        await execAsync('node', ['-e', code], { stdio: 'inherit', cwd: process.cwd() })
+        log.success('自定义模板安装成功')
+      } else {
+        throw new Error('自定义模板入口文件不存在！')
+      }
     }
   }
 
@@ -396,7 +424,7 @@ class InitCommand extends Command {
 }
 
 function init (argv) {
-  // log.verbose('argv', argv);
+  log.verbose('argv', argv)
   return new InitCommand(argv)
 }
 
