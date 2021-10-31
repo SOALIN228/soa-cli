@@ -90,7 +90,7 @@ class InitCommand extends Command {
       log.success('模板安装成功')
     }
     const templateIgnore = this.templateInfo.ignore || []
-    const ignore = ['**/node_modules/**', 'public/**', ...templateIgnore]
+    const ignore = ['**/node_modules/**', ...templateIgnore]
     await this.ejsRender({ ignore })
     const { installCommand, startCommand } = this.templateInfo
     // 依赖安装
@@ -277,6 +277,8 @@ class InitCommand extends Command {
       }],
     })
     const title = type === TYPE_PROJECT ? '项目' : '组件'
+    this.template = this.template.filter(template => template.tag.includes(type))
+    // 根据项目or组件生成对去的命令行提示
     const projectNamePrompt = {
       type: 'input',
       name: 'projectName',
@@ -319,8 +321,9 @@ class InitCommand extends Command {
         }, 0)
       },
       filter: function (v) {
-        // 版本号合法返回格式化后版本号（v1.0.0 -> 1.0.0），否则不处理
+        // 版本号合法进行格式化，反之不处理
         if (!!semver.valid(v)) {
+          // 格式化版本号，v1.0.0 -> 1.0.0
           return semver.valid(v)
         } else {
           return v
@@ -332,14 +335,34 @@ class InitCommand extends Command {
       message: `请选择${title}模板`,
       choices: this.createTemplateChoice(),
     })
-    const project = await inquirer.prompt(projectPrompt)
+    if (type === TYPE_COMPONENT) {
+      const descriptionPrompt = {
+        type: 'input',
+        name: 'componentDescription',
+        message: '请输入组件描述信息',
+        default: '',
+        validate: function (v) {
+          const done = this.async()
+          setTimeout(function () {
+            if (!v) {
+              done('请输入组件描述信息')
+              return
+            }
+            done(null, true)
+          }, 0)
+        },
+      }
+      projectPrompt.push(descriptionPrompt)
+    }
+    // 2. 获取组件的基本信息
+    const promptInfo = await inquirer.prompt(projectPrompt)
     projectInfo = {
       ...projectInfo,
       type,
-      ...project,
+      ...promptInfo,
     }
 
-    // 生成classname
+    // 处理ejs渲染需要的变量
     if (projectInfo.projectName) {
       projectInfo.name = projectInfo.projectName
       // 将项目名由驼峰转为中划线分割，SoaTemplate => soa-template
@@ -348,6 +371,10 @@ class InitCommand extends Command {
     if (projectInfo.projectVersion) {
       projectInfo.version = projectInfo.projectVersion
     }
+    if (projectInfo.componentDescription) {
+      projectInfo.description = projectInfo.componentDescription
+    }
+
     return projectInfo
   }
 
