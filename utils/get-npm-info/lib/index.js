@@ -25,7 +25,7 @@ function getNpmInfo (npmName, registry) {
  * @param isOriginal 默认使用官方源，可以选择淘宝源
  */
 function getDefaultRegistry (isOriginal = true) {
-  return isOriginal ? 'https://registry.npmjs.org' : 'https://registry.npm.taobao.org'
+  return isOriginal ? 'https://registry.npmjs.org' : 'https://registry.npmmirror.com'
 }
 
 // 获取当前库的版本列表
