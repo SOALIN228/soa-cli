@@ -1,6 +1,6 @@
 {
-  "name": "@soa-cli/package",
-  "version": "0.0.11",
+  "name": "@soa-cli/publish",
+  "version": "0.0.1",
   "description": "> TODO: description",
   "author": "lml <soalin228@163.com>",
   "homepage": "https://github.com/SOALIN228/soa-cli#readme",
@@ -27,13 +27,8 @@
     "url": "https://github.com/SOALIN228/soa-cli/issues"
   },
   "dependencies": {
-    "@soa-cli/format-path": "file:../../utils/format-path",
-    "@soa-cli/get-npm-info": "file:../../utils/get-npm-info",
-    "@soa-cli/utils": "file:../../utils/utils",
-    "fs-extra": "^10.0.0",
-    "npminstall": "4.11.0",
-    "path-exists": "4.0.0",
-    "pkg-dir": "5.0.0"
-  },
-  "gitHead": "f32119a92d9bf0d72d5299497c6901576e935b2e"
+    "@soa-cli/command": "file:../../models/command",
+    "@soa-cli/log": "file:../../utils/log",
+    "fs-extra": "^10.0.1"
+  }
 }

@@ -6,7 +6,7 @@ const colors = require('colors')
 const userHome = require('user-home')
 const pathExists = require('path-exists').sync
 const commander = require('commander')
-
+// 内部依赖
 const log = require('@soa-cli/log')
 const exec = require('@soa-cli/exec')
 const pkg = require('../package.json')
@@ -22,12 +22,14 @@ async function core () {
     registerCommand()
   } catch (e) {
     log.error(e.message)
+    // 开启debug时，打印错误信息
     if (program.opts().debug) {
       console.log(e)
     }
   }
 }
 
+// 脚手架执行前的相关操作
 async function prepare () {
   checkPkgVersion()
   checkRoot()
@@ -36,48 +38,55 @@ async function prepare () {
   await checkGlobalUpdate()
 }
 
-// 脚手架命令处理
+// 脚手架命令注册
 function registerCommand () {
   program
-    .name(Object.keys(pkg.bin)[0])
-    .usage('<command> [options]')
-    .version(pkg.version)
-    .option('-d, --debug', '是否开启调试模式', false)
+    .name(Object.keys(pkg.bin)[0]) // 设置脚手架名称
+    .usage('<command> [options]') // 设置首行提示信息
+    .version(pkg.version, '-V, --version', '输出版本号') // 设置-V 时的版本信息和提示
+    .helpOption('-h, --help', '显示命令的提示') // 设置-v是版本信息和提示
+    .option('-d, --debug', '是否开启调试模式', false) // 声明全局option
     .option('-tp, --targetPath <targetPath>', '是否指定本地调试文件路径', '')
 
   // 注册init命令
   program
     .command('init [projectName]')
-    .option('-f, --force', '是否强制初始化项目')
+    .option('-f, --force', '是否强制初始化项目') // init 命令专属option
     .action(exec)
 
-  // 开启debug模式
+  // program
+  //   .command('publish')
+  //   .action(exec)
+
+  // 监听targetPath
+  program.on('option:targetPath', function () {
+    // 将targetPath写入环境变量，方便不同层级的command获取
+    process.env.CLI_TARGET_PATH = this.opts().targetPath
+  })
+
+  // 监听option中的debug
   program.on('option:debug', function () {
+    // 开启debug模式
     if (program.opts().debug) {
       process.env.LOG_LEVEL = 'verbose'
     } else {
       process.env.LOG_LEVEL = 'info'
     }
-    // 修改log level 用于debug调试
     log.level = process.env.LOG_LEVEL
-  })
-
-  // 指定targetPath
-  program.on('option:targetPath', function () {
-    process.env.CLI_TARGET_PATH = this.opts().targetPath
   })
 
   // 对未知命令监听
   program.on('command:*', function (obj) {
     const availableCommands = program.commands.map(cmd => cmd.name())
     console.log(colors.red('未知的命令：' + obj[0]))
+    // 展示可执行命令
     if (availableCommands.length > 0) {
       console.log(colors.red('可用命令：' + availableCommands.join(',')))
     }
   })
 
-  program.parse(process.argv)
-  // 未输入命令时，打印帮助文档
+  program.parse(process.argv) // 将参数传递给脚手架
+  // 未输入命令时(或只输入option)，打印帮助文档
   if (program.args && program.args.length < 1) {
     program.outputHelp()
     console.log() // 打印空行
@@ -91,7 +100,7 @@ async function checkGlobalUpdate () {
   const npmName = pkg.name
   // 调用npm API 获取所以版本号
   const { getNpmSemverVersion } = require('@soa-cli/get-npm-info')
-  // 最新版本
+  // 检查是否存在最新版本，存在返回版本号
   const latestVersion = await getNpmSemverVersion(currentVersion, npmName)
   // 是否存在最新版本提示
   if (latestVersion && semver.gt(latestVersion, currentVersion)) {
@@ -107,8 +116,9 @@ async function checkGlobalUpdate () {
 function checkEnv () {
   const dotenv = require('dotenv')
   const dotenvPath = path.resolve(userHome, '.env')
-  // 存在环境变量
+  // 是否存在环境变量配置文件
   if (pathExists(dotenvPath)) {
+    // 将.env中的配置设置到process.env中
     dotenv.config({
       path: dotenvPath
     })
@@ -138,7 +148,7 @@ function checkUserHome () {
 
 // 检查是否通过root权限执行脚手架
 function checkRoot () {
-  // 对root账号（sudo）启动的命令进行降级
+  // 对root账号（sudo）启动的命令进行降级，避免普通用户无法读写执行，root账号创建的内容
   // 判断geteuid是否为0（root），如果为0对uid和gid进行修改
   const rootCheck = require('root-check')
   rootCheck()

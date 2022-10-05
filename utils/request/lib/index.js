@@ -2,8 +2,7 @@
 
 const axios = require('axios')
 
-const BASE_URL = process.env.SOA_CLI_BASE_URL ? process.env.SOA_CLI_BASE_URL :
-  'http://soa-cli.com:7001'
+const BASE_URL = process.env.SOA_CLI_BASE_URL || 'http://soa-cli.com:7001'
 
 const request = axios.create({
   baseURL: BASE_URL,

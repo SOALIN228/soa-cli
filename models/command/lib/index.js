@@ -19,17 +19,19 @@ class Command {
     }
     this._argv = argv
     let runner = new Promise((resolve, reject) => {
+      // 微任务链式调用
       let chain = Promise.resolve()
       chain = chain.then(() => this.checkNodeVersion())
       chain = chain.then(() => this.initArgs())
       chain = chain.then(() => this.init())
       chain = chain.then(() => this.exec())
-      chain = chain.then(resolve)
+      //   chain = chain.then(resolve)
       chain.catch(err => {
         log.error(err.message)
         reject(err)
       })
     })
+    this.runner = runner
   }
 
   // 格式化初始参数

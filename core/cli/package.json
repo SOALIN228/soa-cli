@@ -6,7 +6,7 @@
   "homepage": "",
   "license": "ISC",
   "bin": {
-    "soa": "bin/index.js"
+    "soa-cli": "bin/index.js"
   },
   "main": "lib/index.js",
   "directories": {
@@ -20,9 +20,9 @@
     "test": "echo \"Error: run tests from root\" && exit 1"
   },
   "dependencies": {
-    "@soa-cli/exec": "^0.0.11",
-    "@soa-cli/get-npm-info": "file:../../utils/get-npm-info",
-    "@soa-cli/log": "^0.0.11",
+    "@soa-cli/exec": "file:../exec",
+    "@soa-cli/get-npm-info": "^0.0.11",
+    "@soa-cli/log": "file:../../utils/log",
     "@soa-cli/utils": "^0.0.11",
     "colors": "^1.4.0",
     "commander": "^8.2.0",

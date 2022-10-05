@@ -4,7 +4,7 @@ const pkgDir = require('pkg-dir').sync
 const pathExists = require('path-exists').sync
 const fse = require('fs-extra')
 const npminstall = require('npminstall')
-
+// 内置库
 const { isObject } = require('@soa-cli/utils')
 const formatPath = require('@soa-cli/format-path')
 const { getDefaultRegistry, getNpmLatestVersion } = require('@soa-cli/get-npm-info')
@@ -23,6 +23,9 @@ class Package {
     this.storeDir = options.storeDir
     // package的name
     this.packageName = options.packageName
+    // npminstall 生成的pkg名称会忽略斜杠后的内容
+    const existsDLine = options.packageName.indexOf('/')
+    this.sortPackageName = existsDLine !== -1 ? options.packageName.slice(0, existsDLine) : options.packageName
     // package的version
     this.packageVersion = options.packageVersion
     // package的缓存目录前缀
@@ -30,16 +33,19 @@ class Package {
   }
 
   get cacheFilePath () {
-    return path.resolve(this.storeDir, `_${this.cacheFilePathPrefix}@${this.packageVersion}@${this.packageName}`)
+    // @soa-cli/init 1.0.0 => _@soa-cli_init@1.0.0@@soa-cli/init
+    return path.resolve(this.storeDir, `_${this.cacheFilePathPrefix}@${this.packageVersion}@${this.sortPackageName}`)
   }
 
   getSpecificCacheFilePath (packageVersion) {
-    return path.resolve(this.storeDir, `_${this.cacheFilePathPrefix}@${packageVersion}@${this.packageName}`)
+    return path.resolve(this.storeDir, `_${this.cacheFilePathPrefix}@${packageVersion}@${this.sortPackageName}`)
   }
 
+  // 安装和更新的前置操作
   async prepare () {
-    // 创建缓存目录
+    // 校验缓存目录
     if (this.storeDir && !pathExists(this.storeDir)) {
+      // 目录不存在，创建缓存目录
       fse.mkdirpSync(this.storeDir)
     }
     // 将latest转化为最新的版本号
@@ -52,6 +58,7 @@ class Package {
   async exists () {
     if (this.storeDir) {
       await this.prepare()
+      // 校验缓存pkg是否存在
       return pathExists(this.cacheFilePath)
     } else {
       return pathExists(this.targetPath)
@@ -62,10 +69,10 @@ class Package {
   async install () {
     await this.prepare()
     return npminstall({
-      root: this.targetPath,
-      storeDir: this.storeDir,
-      registry: getDefaultRegistry(),
-      pkgs: [{
+      root: this.targetPath, // 命令执行路径
+      storeDir: this.storeDir, // 缓存node_modules目录
+      registry: getDefaultRegistry(), // 源地址
+      pkgs: [{ // 需要安装的pkg
         name: this.packageName,
         version: this.packageVersion,
       }],
@@ -103,9 +110,9 @@ class Package {
       if (dir) {
         // 2. 读取package.json
         const pkgFile = require(path.resolve(dir, 'package.json'))
-        // 3. 寻找main/lib
+        // 3. 判断main字段是否存在（commonjs规范）
         if (pkgFile && pkgFile.main) {
-          // 4. 路径的兼容(macOS/windows)
+          // 4. 返回入口文件路径，需要做路径兼容(macOS/windows)
           return formatPath(path.resolve(dir, pkgFile.main))
         }
       }
@@ -114,8 +121,10 @@ class Package {
 
     // 是否存在缓存目录
     if (this.storeDir) {
+      // 去缓存目录中查找
       return _getRootFile(this.cacheFilePath)
     } else {
+      // 在本地调试路径中查找
       return _getRootFile(this.targetPath)
     }
   }

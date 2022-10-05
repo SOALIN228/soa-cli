@@ -4,6 +4,12 @@ const axios = require('axios')
 const urlJoin = require('url-join')
 const semver = require('semver')
 
+/**
+ * 根据包名获取package的信息
+ * @param npmName 包名
+ * @param registry npm包源地址
+ * @returns {null|Promise<T>}
+ */
 function getNpmInfo (npmName, registry) {
   if (!npmName) {
     return null
@@ -28,7 +34,7 @@ function getDefaultRegistry (isOriginal = true) {
   return isOriginal ? 'https://registry.npmjs.org' : 'https://registry.npmmirror.com'
 }
 
-// 获取当前库的版本列表
+// 获取当前package的版本列表
 async function getNpmVersions (npmName, registry) {
   const data = await getNpmInfo(npmName, registry)
   if (data) {
@@ -48,6 +54,7 @@ function getSemverVersions (baseVersion, versions) {
 // 检查当前版本是否为最新，是返回null，否返回最新版本
 async function getNpmSemverVersion (baseVersion, npmName, registry) {
   const versions = await getNpmVersions(npmName, registry)
+  // 获取大于指定version的列表
   const newVersions = getSemverVersions(baseVersion, versions)
   if (newVersions && newVersions.length > 0) {
     return newVersions[0]
