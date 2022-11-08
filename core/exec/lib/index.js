@@ -62,19 +62,25 @@ async function exec () {
       // 对cmd进行瘦身，去除无用属性
       const o = Object.create(null)
       Object.keys(cmd).forEach(key => {
-        // 过滤掉原型链上的属性、过滤掉以_开头的私有属性、过滤掉parent的属性
-        if (cmd.hasOwnProperty(key) && !key.startsWith('_') && key !== 'parent') {
-          o[key] = cmd[key]
+          // 过滤掉原型链上的属性、过滤掉以_开头的私有属性、过滤掉parent的属性
+          if (cmd.hasOwnProperty(key) && key !== 'parent') {
+            if (!key.startsWith('_')) {
+              o[key] = cmd[key]
+            } else if (key === '_optionValues') {
+              Object.keys(cmd[key]).forEach(cmdKey => {
+                o[cmdKey] = cmd[key][cmdKey]
+              })
+            }
+          }
         }
-      })
+      )
       // 替换cmd
       args[args.length - 1] = o
       // 实现动态调用命令
       const code = `require('${rootFile}').call(null, ${JSON.stringify(args)})`
       // 对spawn做了操作系统的兼容
       const child = spawn('node', ['-e', code], {
-        cwd: process.cwd(),
-        // 将子进程的数据直接在父进程显示，而不是通过监听事件获取子进程数据
+        cwd: process.cwd(), // 将子进程的数据直接在父进程显示，而不是通过监听事件获取子进程数据
         stdio: 'inherit' // 默认为pipe
       })
       // 监听子进程错误事件
@@ -87,7 +93,8 @@ async function exec () {
         log.verbose('命令执行成功:' + e)
         process.exit(e)
       })
-    } catch (e) {
+    } catch
+      (e) {
       log.error(e.message)
     }
   }

@@ -54,9 +54,13 @@ function registerCommand () {
     .option('-f, --force', '是否强制初始化项目') // init 命令专属option
     .action(exec)
 
-  // program
-  //   .command('publish')
-  //   .action(exec)
+  // 注册publish命令
+  program
+    .command('publish')
+    .option('--refreshServer', '强制更新远程Git仓库') // publish 命令专属option
+    .option('--refreshToken', '强制更新远程仓库token')
+    .option('--refreshOwner', '强制更新远程仓库类型')
+    .action(exec)
 
   // 监听targetPath
   program.on('option:targetPath', function () {

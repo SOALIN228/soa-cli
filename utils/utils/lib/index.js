@@ -1,5 +1,7 @@
 'use strict'
 
+const fs = require('fs')
+
 function isObject (o) {
   return Object.prototype.toString.call(o) === '[object Object]'
 }
@@ -52,4 +54,44 @@ function sleep (timeout = 1000) {
   return new Promise(resolve => setTimeout(resolve, timeout))
 }
 
-module.exports = { isObject, exec, execAsync, spinnerStart, sleep }
+/**
+ * 读取文件
+ * @param path 文件路径
+ * @param options
+ * @returns {{type: "Buffer", data: number[]}|string|null}
+ */
+function readFile (path, options = {}) {
+  if (fs.existsSync(path)) {
+    const buffer = fs.readFileSync(path)
+    if (buffer) {
+      if (options.toJson) {
+        return buffer.toJSON()
+      } else {
+        return buffer.toString()
+      }
+    }
+  }
+  return null
+}
+
+/**
+ * 写入文件
+ * @param path 文件路径
+ * @param data
+ * @param rewrite 是否重写
+ * @returns {boolean} 写入结果
+ */
+function writeFile (path, data, { rewrite = true } = {}) {
+  if (fs.existsSync(path)) {
+    if (rewrite) {
+      fs.writeFileSync(path, data)
+      return true
+    }
+    return false
+  } else {
+    fs.writeFileSync(path, data)
+    return true
+  }
+}
+
+module.exports = { isObject, exec, execAsync, spinnerStart, sleep, readFile, writeFile }

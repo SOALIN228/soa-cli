@@ -4,7 +4,7 @@
  * Time: 21:10
  * Desc:
  */
-const DEFAULT_CLI_HOME = '.soa-cli'
+const DEFAULT_CLI_HOME = '.soa-cli-dev'
 
 module.exports = {
   DEFAULT_CLI_HOME

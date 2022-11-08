@@ -85,7 +85,7 @@ class InitCommand extends Command {
           sourcePath: templatePath,
           targetPath: process.cwd(),
         }
-        // 将命令参数传递给自定义模版入口文件，生成命令字符串
+        // 将命令参数传递给入口文件默认导出的方法，并格式化为命令字符串
         const code = `require('${rootFile}')(${JSON.stringify(options)})`
         log.verbose('code', code)
         // 执行命令字符串
@@ -310,6 +310,7 @@ class InitCommand extends Command {
       }],
     })
     const title = type === TYPE_PROJECT ? '项目' : '组件'
+    // 根据模版类型过滤模版列表
     this.template = this.template.filter(template => template.tag.includes(type))
     // 根据项目or组件生成对去的命令行提示
     const projectNamePrompt = {

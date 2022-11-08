@@ -25,7 +25,7 @@ class Command {
       chain = chain.then(() => this.initArgs())
       chain = chain.then(() => this.init())
       chain = chain.then(() => this.exec())
-      //   chain = chain.then(resolve)
+      chain = chain.then(resolve)
       chain.catch(err => {
         log.error(err.message)
         reject(err)
@@ -37,7 +37,7 @@ class Command {
   // 格式化初始参数
   initArgs () {
     // 获取输入参数
-    this._cmd = this._argv[1]
+    this._cmd = this._argv[this._argv.length - 1]
     this._argv = this._argv.slice(0, this._argv.length - 1)
     log.verbose('initArgs', this._cmd, this._argv)
   }
