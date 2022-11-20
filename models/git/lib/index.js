@@ -18,6 +18,7 @@ const GIT_SERVER_FILE = '.git_server'
 const GIT_TOKEN_FILE = '.git_token'
 const GIT_OWN_FILE = '.git_own'
 const GIT_LOGIN_FILE = '.git_login'
+const GIT_IGNORE_FILE = '.gitignore'
 const GITHUB = 'github'
 const GITEE = 'gitee'
 const REPO_OWNER_USER = 'user'
@@ -73,6 +74,7 @@ class Git {
     await this.getUserAndOrgs() // 获取远程仓库用户和组织信息
     await this.checkGitOwner() // 确认远程仓库类型
     await this.checkRepo() // 检查并创建远程仓库
+    this.checkGitIgnore() // 检查并创建.gitignore文件
   }
 
   async checkGitServer () {
@@ -173,6 +175,7 @@ class Git {
     let repo = await this.gitServer.getRepo(this.login, this.name)
     if (!repo) {
       let spinner = spinnerStart('开始创建远程仓库...')
+      console.log('\n')
       try {
         if (this.owner === REPO_OWNER_USER) {
           repo = await this.gitServer.createRepo(this.name)
@@ -191,6 +194,35 @@ class Git {
     }
     log.verbose('repo', repo)
     this.repo = repo
+  }
+
+  checkGitIgnore () {
+    const gitIgnore = path.resolve(this.dir, GIT_IGNORE_FILE)
+    if (!fs.existsSync(gitIgnore)) {
+      writeFile(gitIgnore, `.DS_Store
+node_modules
+/dist
+
+# local env files
+.env.local
+.env.*.local
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?`)
+      log.success(`自动写入${GIT_IGNORE_FILE}文件成功`)
+    }
   }
 
   checkHomePath () {
