@@ -105,15 +105,16 @@ async function checkGlobalUpdate () {
   // 调用npm API 获取所以版本号
   const { getNpmSemverVersion } = require('@soa-cli/get-npm-info')
   // 检查是否存在最新版本，存在返回版本号
-  const latestVersion = await getNpmSemverVersion(currentVersion, npmName)
-  // 是否存在最新版本提示
-  if (latestVersion && semver.gt(latestVersion, currentVersion)) {
-    log.warn(
-      colors.yellow(`请手动更新${npmName}, 当前版本:${currentVersion}, 最新版本: ${latestVersion}
-                  更新命令: npm install -g ${npmName}
-        `)
-    )
-  }
+  // todo 本地开发网络卡顿，先注释
+  // const latestVersion = await getNpmSemverVersion(currentVersion, npmName)
+  // // 是否存在最新版本提示
+  // if (latestVersion && semver.gt(latestVersion, currentVersion)) {
+  //   log.warn(
+  //     colors.yellow(`请手动更新${npmName}, 当前版本:${currentVersion}, 最新版本: ${latestVersion}
+  //                 更新命令: npm install -g ${npmName}
+  //       `)
+  //   )
+  // }
 }
 
 // 检查环境变量

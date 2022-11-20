@@ -43,6 +43,18 @@ class GitServer {
   getTokenHelpUrl () {
     error('getTokenHelpUrl')
   }
+
+  isHttpResponse = (response) => {
+    return response && response.status
+  }
+
+  handleResponse = (response) => {
+    if (this.isHttpResponse(response) && response !== 200) {
+      return null
+    } else {
+      return response
+    }
+  }
 }
 
 module.exports = GitServer
