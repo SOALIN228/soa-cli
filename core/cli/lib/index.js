@@ -60,6 +60,7 @@ function registerCommand () {
     .option('--refreshServer', '强制更新远程Git仓库') // publish 命令专属option
     .option('--refreshToken', '强制更新远程仓库token')
     .option('--refreshOwner', '强制更新远程仓库类型')
+    .option('--buildCmd <buildCmd>', '构建命令')
     .action(exec)
 
   // 监听targetPath
@@ -166,12 +167,12 @@ function checkPkgVersion () {
 
 process.on('unhandledRejection', (reason, p) => {
   // 我刚刚捕获了一个未处理的promise rejection, 因为我们已经有了对于未处理错误的后备的处理机制（见下面）, 直接抛出，让它来处理
-  console.log('unhandledRejection', reason, p);
-  throw reason;
-});
+  console.log('unhandledRejection', reason, p)
+  throw reason
+})
 
 process.on('uncaughtException', (error) => {
   // 我刚收到一个从未被处理的错误，现在处理它，并决定是否需要重启应用
-  console.log('uncaughtException', error);
-  process.exit(1);
-});
+  console.log('uncaughtException', error)
+  process.exit(1)
+})

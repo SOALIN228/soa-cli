@@ -10,6 +10,7 @@ const terminalLink = require('terminal-link')
 const semver = require('semver')
 const log = require('@soa-cli/log')
 const { readFile, writeFile, spinnerStart } = require('@soa-cli/utils')
+const CloudBuild = require('@soa-cli/cloudbuild')
 const Github = require('./Github')
 const Gitee = require('./Gitee')
 
@@ -28,31 +29,24 @@ const VERSION_RELEASE = 'release'
 const VERSION_DEVELOP = 'dev'
 
 const GIT_SERVER_TYPE = [{
-  name: 'Github',
-  value: GITHUB,
+  name: 'Github', value: GITHUB,
 }, {
-  name: 'Gitee',
-  value: GITEE,
+  name: 'Gitee', value: GITEE,
 }]
 
 const GIT_OWNER_TYPE = [{
-  name: '个人',
-  value: REPO_OWNER_USER,
+  name: '个人', value: REPO_OWNER_USER,
 }, {
-  name: '组织',
-  value: REPO_OWNER_ORG,
+  name: '组织', value: REPO_OWNER_ORG,
 }]
 
 const GIT_OWNER_TYPE_ONLY = [{
-  name: '个人',
-  value: REPO_OWNER_USER,
+  name: '个人', value: REPO_OWNER_USER,
 }]
 
 class Git {
   constructor ({ name, version, dir }, {
-    refreshServer = false,
-    refreshToken = false,
-    refreshOwner = false,
+    refreshServer = false, refreshToken = false, refreshOwner = false, buildCmd = ''
   }) {
     this.name = name // 项目名称
     this.version = version // 项目版本
@@ -69,6 +63,8 @@ class Git {
     this.refreshServer = refreshServer // 是否强制刷新远程仓库
     this.refreshToken = refreshToken // 是否强化刷新远程仓库token
     this.refreshOwner = refreshOwner // 是否强化刷新远程仓库类型
+    this.branch = null // 本地开发分支
+    this.buildCmd = buildCmd // 构建命令
   }
 
   async prepare () {
@@ -127,10 +123,7 @@ class Git {
     if (!token || this.refreshToken) {
       log.warn(this.gitServer.type + ' token未生成', '请先生成' + this.gitServer.type + ' token，' + terminalLink('链接', this.gitServer.getTokenUrl()))
       token = (await inquirer.prompt({
-        type: 'password',
-        name: 'token',
-        message: '请将token复制到这里',
-        default: '',
+        type: 'password', name: 'token', message: '请将token复制到这里', default: '',
       })).token
       writeFile(tokenPath, token)
       log.success('token写入成功', `${token} -> ${tokenPath}`)
@@ -172,12 +165,8 @@ class Git {
         login = this.user.login
       } else {
         login = (await inquirer.prompt({
-          type: 'list',
-          name: 'login',
-          message: '请选择',
-          choices: this.orgs.map(item => ({
-            name: item.login,
-            value: item.login,
+          type: 'list', name: 'login', message: '请选择', choices: this.orgs.map(item => ({
+            name: item.login, value: item.login,
           })),
         })).login
       }
@@ -281,6 +270,29 @@ pnpm-debug.log*
     await this.pushRemoteRepo(this.branch)
   }
 
+  async publish () {
+    await this.preparePublish()
+    const cloudBuild = new CloudBuild(this, {
+      buildCmd: this.buildCmd,
+      //     type: this.gitPublish,
+      //     prod: this.prod,
+    })
+    await cloudBuild.init()
+    await cloudBuild.build()
+  }
+
+  async preparePublish () {
+    log.info('开始进行云构建前代码检查')
+    if (this.buildCmd) {
+      const buildCmdArray = this.buildCmd.split(' ')
+      if (buildCmdArray[0] !== 'npm' && buildCmdArray[0] !== 'cnpm') {
+        throw new Error('Build命令非法，必须使用npm或cnpm！')
+      }
+    } else {
+      this.buildCmd = 'npm run build'
+    }
+  }
+
   async getCorrectVersion () {
     // 1.获取远程分布分支
     // 版本号规范：release/x.y.z，dev/x.y.z
@@ -303,19 +315,12 @@ pnpm-debug.log*
     } else {
       log.info('当前线上版本大于本地版本', `${releaseVersion} > ${devVersion}`)
       const incType = (await inquirer.prompt({
-        type: 'list',
-        name: 'incType',
-        message: '自动升级版本，请选择升级版本类型',
-        default: 'patch',
-        choices: [{
-          name: `小版本（${releaseVersion} -> ${semver.inc(releaseVersion, 'patch')}）`,
-          value: 'patch',
+        type: 'list', name: 'incType', message: '自动升级版本，请选择升级版本类型', default: 'patch', choices: [{
+          name: `小版本（${releaseVersion} -> ${semver.inc(releaseVersion, 'patch')}）`, value: 'patch',
         }, {
-          name: `中版本（${releaseVersion} -> ${semver.inc(releaseVersion, 'minor')}）`,
-          value: 'minor',
+          name: `中版本（${releaseVersion} -> ${semver.inc(releaseVersion, 'minor')}）`, value: 'minor',
         }, {
-          name: `大版本（${releaseVersion} -> ${semver.inc(releaseVersion, 'major')}）`,
-          value: 'major',
+          name: `大版本（${releaseVersion} -> ${semver.inc(releaseVersion, 'major')}）`, value: 'major',
         }],
       })).incType
       const incVersion = semver.inc(releaseVersion, incType)
@@ -447,12 +452,7 @@ pnpm-debug.log*
 
   async checkNotCommitted () {
     const status = await this.git.status()
-    if (status.not_added.length > 0 ||
-      status.created.length > 0 ||
-      status.deleted.length > 0 ||
-      status.modified.length > 0 ||
-      status.renamed.length > 0
-    ) {
+    if (status.not_added.length > 0 || status.created.length > 0 || status.deleted.length > 0 || status.modified.length > 0 || status.renamed.length > 0) {
       log.verbose('status', status)
       await this.git.add(status.not_added)
       await this.git.add(status.created)
@@ -462,9 +462,7 @@ pnpm-debug.log*
       let message
       while (!message) {
         message = (await inquirer.prompt({
-          type: 'text',
-          name: 'message',
-          message: '请输入commit信息：',
+          type: 'text', name: 'message', message: '请输入commit信息：',
         })).message
       }
       await this.git.commit(message)
